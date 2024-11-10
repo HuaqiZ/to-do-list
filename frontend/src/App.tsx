@@ -1,8 +1,6 @@
 // src/App.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-
 
 interface List {
   content: string,
@@ -17,18 +15,6 @@ const App: React.FC = () => {
   const [lists, setLists] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [completedList, setCompletedList] = useState<string[]>([]);
-
-  const rows: GridRowsProp = [
-    { id: 1, col1: 'Hello', col2: 'World' },
-    { id: 2, col1: 'DataGridPro', col2: 'is Awesome' },
-    { id: 3, col1: 'MUI', col2: 'is Amazing' },
-  ];
-
-  const columns: GridColDef[] = [
-    { field: 'col1', headerName: 'Column 1', width: 150 },
-    { field: 'col2', headerName: 'Column 2', width: 150 },
-  ];
-  
 
   useEffect(() => {
     axios.get('http://localhost:9000') // Backend URL
@@ -86,8 +72,6 @@ const App: React.FC = () => {
               ))}
           </div>
         </div>
-
-        <DataGrid rows={rows} columns={columns} />
 
         {/* <div>
           <h1>Completed Lists</h1>
