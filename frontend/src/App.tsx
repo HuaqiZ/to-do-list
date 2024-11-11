@@ -1,6 +1,12 @@
 // src/App.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { HiOutlinePencil } from "react-icons/hi";
+import { HiOutlineTrash } from "react-icons/hi";
+
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+        
 
 interface List {
   content: string,
@@ -15,6 +21,8 @@ const App: React.FC = () => {
   const [lists, setLists] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [completedList, setCompletedList] = useState<string[]>([]);
+
+  const products = [{code: 1, name:"name", category: "ok", quantity: "good"}]
 
   useEffect(() => {
     axios.get('http://localhost:9000') // Backend URL
@@ -53,6 +61,23 @@ const App: React.FC = () => {
     setCompletedList((prev) => [...prev, listContent]);
     setLists((prev) => prev.filter((item) => item !== listContent));
   }
+
+  const actionBodyTemplate = (rowData: any) => {
+    return (
+      <div>
+        <button id="edit_button" onClick={() => editProduct(rowData)}><HiOutlinePencil /></button>
+        <button id="delete_button" onClick={() => deleteProduct(rowData)}><HiOutlineTrash /></button>
+      </div>
+    );
+  };
+
+  const editProduct = (product: any) => {
+    showPopupBox(true);
+  };
+
+  const deleteProduct = (product: any) => {
+    alert(`Deleting product: ${product.name}`);
+  };
    
   return (
     <div>
@@ -72,6 +97,14 @@ const App: React.FC = () => {
               ))}
           </div>
         </div>
+
+        <DataTable value={products} tableStyle={{ minWidth: '50rem' }}>
+            <Column field="code" header="Code"></Column>
+            <Column field="name" header="Name"></Column>
+            <Column field="category" header="Category"></Column>
+            <Column field="quantity" header="Quantity"></Column>
+            <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '12rem' }}></Column>
+        </DataTable>
 
         {/* <div>
           <h1>Completed Lists</h1>

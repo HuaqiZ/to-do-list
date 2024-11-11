@@ -54,6 +54,21 @@ code {
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+#edit_button {
+  background-color: white;
+  border-radius: 50%;
+  border: 3px solid rgb(104, 197, 227);
+  color: rgb(104, 197, 227);
+  margin-right: 10px;;
+}
+
+#delete_button{
+  background-color: white;
+  border-radius: 50%;
+  border: 3px solid red;
+  color: red;
+}
+
 #task_name {
     position: relative;
     display: flex;
