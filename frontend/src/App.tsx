@@ -1,28 +1,64 @@
-// src/App.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import { HiOutlinePencil } from "react-icons/hi";
-import { HiOutlineTrash } from "react-icons/hi";
+import {
+  DndContext,
+  closestCenter,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-        
+import "./style.css"; // Custom CSS for styling the grid
 
 interface List {
+  task_name: string,
   content: string,
-  date: number,
+  due_date: any,
   display_order: number,
-  status: true,
+  status: number,
 }
 
-const App: React.FC = () => {
+const SortableItem = ({ id }: { id: string }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="sortable-item"
+      {...attributes}
+      {...listeners}
+    >
+      {id}
+    </div>
+  );
+};
+
+const App = () => {
+  const [items, setItems] = useState(["1", "2", "3", "4", "5", "6", "7"]);
   const [data, setData] = useState<List[]>([]);
   const [popupBox, showPopupBox] = useState(false);
-  const [lists, setLists] = useState<string[]>([]);
+  const [name, setName] = useState('');
   const [content, setContent] = useState('');
-  const [completedList, setCompletedList] = useState<string[]>([]);
-
-  const products = [{code: 1, name:"name", category: "ok", quantity: "good"}]
 
   useEffect(() => {
     axios.get('http://localhost:9000') // Backend URL
@@ -30,19 +66,18 @@ const App: React.FC = () => {
       .catch(error => console.error('Error:', error));
   }, []);
 
-  const createNewTodo =() => {
-    showPopupBox(true);
-  }
-
-  const handleTextareaChange = (event: any) => {
-    setContent(event.target.value);
-  };
-
   const addNewToDo = () => {
+    const taskData: List = {
+      task_name: name,
+      content,
+      due_date: null,
+      display_order: 1,
+      status: 1,
+    }
     axios.post('http://localhost:9000/add', {
       content: content,
-      date: null,
-      status: true,
+      due_date: null,
+      status: 0,
       display_order: 1,
     })
     .then(function (response) {
@@ -52,78 +87,66 @@ const App: React.FC = () => {
       console.log(error);
     });
 
-    setLists((prev) => [...prev, content]);
+    setData((prev) => [...prev, taskData]);
     setContent('');
+    setName('');
     showPopupBox(false);
   };
 
-  const changeToCompleted = (listContent: string) => {
-    setCompletedList((prev) => [...prev, listContent]);
-    setLists((prev) => prev.filter((item) => item !== listContent));
+  const createNewTodo =() => {
+    showPopupBox(true);
   }
 
-  const actionBodyTemplate = (rowData: any) => {
-    return (
-      <div>
-        <button id="edit_button" onClick={() => editProduct(rowData)}><HiOutlinePencil /></button>
-        <button id="delete_button" onClick={() => deleteProduct(rowData)}><HiOutlineTrash /></button>
-      </div>
-    );
+  const handleTaskNameChange = (event: any) => {
+    setName(event.target.value);
   };
 
-  const editProduct = (product: any) => {
-    showPopupBox(true);
+  const handleTaskDescriptionChange = (event: any) => {
+    setContent(event.target.value);
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setItems((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
-  const deleteProduct = (product: any) => {
-    alert(`Deleting product: ${product.name}`);
-  };
-   
   return (
     <div>
-      <div className='nav_bar'>
-        <button id="add_button" onClick={() => createNewTodo()}>Add New</button>
-      </div>
-
-      <div className='container'>
-        <div>
-          <h1>Active Lists</h1>
-          <div className='lists'>
-              {data.map((item, index) => (
-                <div className='task' key={index}>
-                  <input type="checkbox" onClick={() => changeToCompleted(item.content)}/>
-                  {item.content}
-                </div>
-              ))}
+      <button id="add_button" onClick={() => createNewTodo()}>Add New</button>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={items} strategy={rectSortingStrategy}>
+          <div className="grid-container">
+            {items.map((id) => (
+              <SortableItem key={id} id={id} />
+            ))}
           </div>
-        </div>
+        </SortableContext>
+      </DndContext>
 
-        <DataTable value={products} tableStyle={{ minWidth: '50rem' }}>
-            <Column field="code" header="Code"></Column>
-            <Column field="name" header="Name"></Column>
-            <Column field="category" header="Category"></Column>
-            <Column field="quantity" header="Quantity"></Column>
-            <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '12rem' }}></Column>
-        </DataTable>
-
-        {/* <div>
-          <h1>Completed Lists</h1>
-          <div className='lists'>
-          {completedList.map((item, index) => (
-            <div className='task' key={index}>
-              {item}
-            </div>
-          ))}
-          </div>
-        </div> */}
-
-        {popupBox &&  
+      {popupBox &&  
             <div className='overlay'>
               <div className='popup'>
                 <div className='content_popup'>
                   <h2>Create task</h2>
-                    <input id="task_name" placeholder='Task name' />
-                    <textarea id="task_description" value={content} onChange={handleTextareaChange} placeholder='Task description' />
+                    <input id="task_name" value={name} placeholder='Task name' onChange={handleTaskNameChange}/>
+                    <textarea id="task_description" value={content} onChange={handleTaskDescriptionChange} placeholder='Task description' />
                     <div className='button_function'>
                       <button id="cancel_button" onClick={() => showPopupBox(false)}>Cancel</button>
                       <button onClick={() => addNewToDo()}>Create task</button>
@@ -143,7 +166,6 @@ const App: React.FC = () => {
               
             </div>
           }
-      </div>
     </div>
   );
 };
