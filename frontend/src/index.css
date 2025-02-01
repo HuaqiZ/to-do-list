@@ -46,6 +46,7 @@ code {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  border-radius: 4px;
 }
 
 .popup {
@@ -95,10 +96,11 @@ code {
   display: flex;
   gap:16px;
   flex-direction: column;
-  width: 510px;
+  width: 550px;
   background-color: white;
-  padding: 20px;
+  padding: 20px 30px 20px 30px;
   max-width: 400px;
+  border-radius: 8px;
 }
 
 .button_function {
@@ -128,10 +130,6 @@ code {
     cursor: pointer;
 }
 
-#add_button {
-  border-radius: 24px;
-}
-
 button {
   padding: 10px 15px;
   border: none;
@@ -140,7 +138,7 @@ button {
 }
 
 .sideBar {
-  width:150px;
+  width:170px;
   background-color: rgb(245, 248, 250);
   padding: 36px 20px 0px;
     max-height: 70vh;
@@ -154,4 +152,30 @@ button {
     -webkit-box-pack: start;
     justify-content: flex-start;
     box-sizing: border-box;
+}
+
+.sortable-item {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  max-width: 200px;
+  min-height: 250px;
+}
+
+.row_container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between; /* Equal spacing between items */
+  gap: 20px; /* Adds spacing between columns */
+  width: 100%;
+  flex-wrap: wrap; /* Ensures items wrap on smaller screens */
+}
+
+.column_item {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Allows columns to share equal space */
+  max-width: 300px; /* Optional: Set a maximum width */
+  min-width: 150px; /* Ensures columns don’t shrink too small */
+  gap:10px;
 }
