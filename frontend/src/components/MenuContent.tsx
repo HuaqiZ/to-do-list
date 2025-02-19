@@ -13,7 +13,6 @@ import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 
 const mainListItems = [
   { text: 'Task', icon: <FormatListBulletedIcon />, link: '/' },
-  { text: 'Calendar', icon: <CalendarMonthIcon />, link: '/calendar' },
   { text: 'Settings', icon: <SettingsSuggestIcon />, link: '/settings' },
 ];
 

@@ -16,17 +16,34 @@
 
 // export default AppRouter;
 
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import SideMenu from "./components/SideMenu";
 import App from "./App"; // Task Page
-import CalendarPage from "./components/CalendarPage";
 import SettingsPage from "./components/SettingsPage";
+import Login from './components/Login';
+import axios from "axios";
 
 const AppRouter = () => {
-  return (
-      <Box sx={{ display: "flex", height: "100vh" }}>
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+
+  // useEffect(() => {
+  //     const checkAuth = async () => {
+  //         try {
+  //             const response = await axios.get("http://localhost:5000/auth/check", { withCredentials: true });
+  //             setIsAuthenticated(response.data.authenticated);
+  //         } catch (error) {
+  //             setIsAuthenticated(false);
+  //         }
+  //     };
+  //     checkAuth();
+  // }, []);
+
+  if (isAuthenticated === null) return <div>Loading...</div>;
+
+  return isAuthenticated ? (
+   <Box sx={{ display: "flex", height: "100vh" }}>
         <SideMenu />
 
         <Box
@@ -39,12 +56,15 @@ const AppRouter = () => {
         >
           <Routes>
             <Route path="/" element={<App />} />
-            <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </Box>
       </Box>
-  );
+  ) : (
+    <Box sx={{ display: "flex", height: "100vh", alignItems: "center", justifyContent:"center" }}>
+      <Login />
+    </Box>
+  )
 };
 
 export default AppRouter;

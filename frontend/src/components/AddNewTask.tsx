@@ -98,7 +98,7 @@ const AddNewTask = () => {
                       </div>
                     </div>
                     <span>Labels</span>
-                    <Stack direction="row" spacing={1} sx={{ marginTop: 1 }}>
+                    <Stack direction="row" spacing={1}>
                       <Chip label="Work" clickable  />
                       <Chip label="Project"  clickable />
                       <Chip label="+ Add Label" variant="outlined" onClick={handleAddLabel} clickable />

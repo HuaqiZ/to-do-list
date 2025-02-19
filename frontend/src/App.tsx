@@ -33,7 +33,7 @@ const App = () => {
   const [data, setData] = useState<List[]>([]);
 
   useEffect(() => {
-    axios.get('http://localhost:8080') 
+    axios.get(`http://localhost:8080/tasks?limit=10&offset=0&filterByField=status&filterByValue=1`) 
       .then(response => setData(response.data))
       .catch(error => console.error('Error:', error));
   }, []);
@@ -61,8 +61,8 @@ const App = () => {
       <Box
         component="main"
         sx={(theme) => ({
-          flexGrow: 1,
-          overflow: 'auto',
+          // flexGrow: 1,
+          // overflow: 'auto',
         })}
       >
           <Header />

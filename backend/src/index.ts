@@ -1,6 +1,8 @@
 const express = require('express');
 const mysql = require('mysql2');
+const jwt = require("jsonwebtoken");
 const cors = require('cors');
+const bcrypt = require("bcryptjs");
 
 // Create an Express app
 const app = express();
@@ -11,6 +13,7 @@ app.use(cors());
 
 // Use JSON middleware to parse request bodies
 app.use(express.json());
+const SECRET_KEY = process.env.JWT_SECRET || "pass";
 
 // Create a connection to the MySQL database
 const db = mysql.createConnection({
@@ -29,10 +32,28 @@ db.connect((err: any) => {
   }
 });
 
+// Simulated login route
+app.post("/auth/login", (req: any, res: any) => {
+  const user = { id: 1, username: "testuser" };
+  const token = jwt.sign(user, SECRET_KEY, { expiresIn: "1h" });
+  res.json({ token });
+});
+
 // Example API route to fetch all records from the 'list' table
-app.get('/', (req: any, res: any) => {
-  db.query('SELECT content, due_date, status, display_order, task_name FROM list', (err: any, results: any) => {
+app.get('/tasks', (req: any, res: any) => {
+  let query = 'SELECT content, due_date, status, display_order, task_name FROM list';
+  if(req.query.filterByField && req.query.filterByValue) {
+    query += ` WHERE ${req.query.filterByField}=${req.query.filterByValue}`
+  }
+  if(req.query.limit) {
+    query += ` limit ${req.query.limit}`
+  }
+  if(req.query.offset) {
+    query += ` offset ${req.query.offset}`
+  }
+  db.query(query, (err: any, results: any) => {
     if (err) {
+      console.log(err);
       res.status(500).json({ error: 'Database query error' });
       return;
     }
