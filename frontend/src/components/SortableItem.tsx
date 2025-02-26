@@ -12,7 +12,6 @@ interface List {
   }
 
 const SortableItem  = ({ id, content }: {id: number, content: List}) => {
-    console.log(content);
       const {
         attributes,
         listeners,

@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import SortableItem from "./components/SortableItem";
 import Header from "./components/Header";
+import { useUser } from "./UserContext";
 
 import "./style.css";
 
@@ -26,15 +27,28 @@ interface List {
   due_date: any,
   display_order: number,
   status: number,
+  label: {
+    id: number;
+    name: string;
+    color: string;
+}[],
+  user_id: number,
 }
 
 const App = () => {
-  const [items, setItems] = useState(["1", "2", "3", "4", "5", "6", "7"]);
   const [data, setData] = useState<List[]>([]);
+  // const [items, setItems] = useState<number[]>([]);
+  const { setUserId } = useUser();
 
   useEffect(() => {
     axios.get(`http://localhost:8080/tasks?limit=10&offset=0&filterByField=status&filterByValue=1`) 
-      .then(response => setData(response.data))
+      .then(response => {
+        const sortedData = response.data.sort((a: List, b: List) => a.display_order - b.display_order);
+        setData(sortedData);
+        // setItems(sortedData.map((item: List) => item.display_order));
+        setUserId(sortedData[1].user_id);
+        localStorage.setItem("userId", String(sortedData[1].user_id));
+      })
       .catch(error => console.error('Error:', error));
   }, []);
 
@@ -46,14 +60,34 @@ const App = () => {
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
+    if (!over || active.id === over.id) return;
+  
+    const oldIndex = data.findIndex(item => item.display_order === active.id);
+    const newIndex = data.findIndex(item => item.display_order === over.id);
+  
+    if (oldIndex === -1 || newIndex === -1) return;
+  
+    const newData = arrayMove(data, oldIndex, newIndex);
+  
+    const updatedData = newData.map((item, index) => ({
+      ...item,
+      display_order: index + 1, 
+    }));
+  
+    setData(updatedData);
+    // setItems(updatedData.map(item => item.display_order));
+  
+    updateDisplayOrder(updatedData);
+  };  
 
-    if (active.id !== over.id) {
-      setItems((items) => {
-        const oldIndex = items.indexOf(active.id);
-        const newIndex = items.indexOf(over.id);
-
-        return arrayMove(items, oldIndex, newIndex);
+  const updateDisplayOrder = async (updatedItems: List[]) => {
+    try {
+      await axios.post("http://localhost:8080/update-order", {
+        tasks: updatedItems.map(({ id, display_order }) => ({ id, display_order })),
       });
+      console.log("Order updated successfully!");
+    } catch (error) {
+      console.error("Error updating order:", error);
     }
   };
 
@@ -65,16 +99,16 @@ const App = () => {
           // overflow: 'auto',
         })}
       >
-          <Header />
+          <Header data={data} setData={setData} />
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext items={items} strategy={rectSortingStrategy}>
+            <SortableContext items={data.map(item => item.display_order)} strategy={rectSortingStrategy}>
               <div className="grid-container">
                 {data.map((item) => (
-                  <SortableItem id={item.id ?? 0} content={item} key={item.id} />
+                  <SortableItem id={item.display_order} content={item} key={item.display_order} />
                 ))}
               </div>
             </SortableContext>

@@ -3,8 +3,22 @@ import Stack from '@mui/material/Stack';
 import AddNewTask from "./AddNewTask";
 import EditType from "./EditType";
 
+interface List {
+  id?: number,
+  task_name: string,
+  content: string,
+  due_date: any,
+  display_order: number,
+  status: number,
+  label: {
+    id: number;
+    name: string;
+    color: string;
+}[],
+  user_id: number,
+}
 
-export default function Header() {
+export default function Header({data, setData }: {data: List[], setData: React.Dispatch<React.SetStateAction<List[]>>}) {
   return (
     <Stack
       direction="row"
@@ -20,7 +34,7 @@ export default function Header() {
       spacing={2}
     >
         <p style={{ marginRight:'1000px'}}>My Tasks</p>
-        <AddNewTask />
+        <AddNewTask data={data} setData={setData} />
         {/* <EditType /> */}
     </Stack>
   );
