@@ -82,7 +82,7 @@ const App = () => {
 
   const updateDisplayOrder = async (updatedItems: List[]) => {
     try {
-      await axios.post("http://localhost:8080/update-order", {
+      await axios.post("http://localhost:8080/task/update-order", {
         tasks: updatedItems.map(({ id, display_order }) => ({ id, display_order })),
       });
       console.log("Order updated successfully!");

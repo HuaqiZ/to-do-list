@@ -61,29 +61,7 @@ app.get('/tasks', (req: any, res: any) => {
   });
 });
 
-app.get('/users/:userId/labels', (req: any, res: any) => {
-  const userId = req.params.userId;
-  const query = `
-    SELECT DISTINCT l.id, l.name, l.color
-    FROM labels l
-    JOIN task_labels tl ON l.id = tl.label_id
-    JOIN list t ON tl.task_id = t.id
-    WHERE t.user_id = ?;
-  `;
-
-  db.query(query, [userId], (err: any, results: any) => {
-    if (err) {
-      console.error('Database query error:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-      return;
-    }
-    res.json(results);
-  });
-});
-
-
-
-app.post('/update-order', (req: any, res: any) => {
+app.post('/task/update-order', (req: any, res: any) => {
   const { tasks } = req.body; // Expecting an array of { id, display_order }
 
   if (!Array.isArray(tasks) || tasks.length === 0) {
@@ -109,8 +87,63 @@ app.post('/update-order', (req: any, res: any) => {
   });
 });
 
+app.get('/labels', (req: any, res: any) => {
+  let query = 'SELECT id, name, color FROM labels';
+  db.query(query, (err: any, results: any) => {
+    if (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Database query error' });
+      return;
+    }
+    res.json(results);
+  });
+});
 
-// Example API route to insert a new record into the 'list' table
+app.post('/label/update-label-setting', (req: any, res: any) => {
+  const {labelName, color, labelId} = req.body;
+
+  let query = "";
+  if(labelId) {
+    query = 'UPDATE labels SET name = ?, color = ? WHERE user_id = 1 AND id = ? ';
+  }else{
+    query = `INSERT INTO labels (name, color, user_id) VALUES (?, ?, ?)`;
+  }
+
+  db.query(query, [labelName, color, labelId], (err: any, result: any) => {
+    if(err) {
+      console.error("Error inserting into list:", err);
+      return res.status(500).json({ error: "Failed to insert task" });
+    }
+    res.json({ message: "Update label ok", result });
+  })
+})
+
+app.get('/display-setting', (req: any, res: any) => {
+  let query = `SELECT show_label_colors, show_completed_tasks FROM users WHERE user_id = 1`;
+  db.query(query, (err: any, results: any) => {
+    if (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Database query error' });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+app.post('/display-setting', (req: any, res: any) => {
+  const {showLabelColor, showCompletedTask} = req.body;
+  
+  let query = `UPDATE users SET show_label_colors = ${showLabelColor === true ? 1 : 0}, show_completed_tasks = ${showCompletedTask === true ? 1 : 0} WHERE user_id = 1`
+
+  db.query(query, (err: any, results: any) => {
+    if (err) {
+      res.status(500).json({ error: 'Database query error', details: err });
+      return;
+    }
+    res.json({ message: "Display Setting Updated Successfully", results });
+  })
+});
+
 app.post('/add', (req: any, res: any) => {
   const { task_name, content, due_date, status, display_order, label, user_id } = req.body;
   const formattedDueDate = new Date(due_date).toISOString().split('T')[0];

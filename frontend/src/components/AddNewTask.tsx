@@ -35,7 +35,7 @@ const AddNewTask = ({data, setData }: {data: List[], setData: React.Dispatch<Rea
   useEffect(() => {
     const fetchLabels = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/users/${userId}/labels`);
+        const response = await axios.get(`http://localhost:8080/labels`);
         setLabel(response.data);
       } catch (error) {
         console.error("Error fetching labels:", error);
