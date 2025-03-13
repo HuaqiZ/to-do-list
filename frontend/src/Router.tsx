@@ -24,21 +24,25 @@ import App from "./App"; // Task Page
 import SettingsPage from "./components/SettingsPage";
 import Login from './components/Login';
 import axios from "axios";
+import { useUser } from "./UserContext";
 
 const AppRouter = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const { setUserId } = useUser();
 
-  // useEffect(() => {
-  //     const checkAuth = async () => {
-  //         try {
-  //             const response = await axios.get("http://localhost:5000/auth/check", { withCredentials: true });
-  //             setIsAuthenticated(response.data.authenticated);
-  //         } catch (error) {
-  //             setIsAuthenticated(false);
-  //         }
-  //     };
-  //     checkAuth();
-  // }, []);
+  useEffect(() => {
+    async function checkIfLogin() {
+      try {
+        const response = await axios.get(`http://localhost:8080/auth/check`,{withCredentials: true})
+        setIsAuthenticated(true);
+        setUserId(response.data.user.id);
+        localStorage.setItem("userId", String(response.data.user.id));
+      } catch(err) {
+        console.error('Authentication check failed:', err)
+      }
+    }
+    checkIfLogin();
+  }, []);
 
   if (isAuthenticated === null) return <div>Loading...</div>;
 

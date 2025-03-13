@@ -1,10 +1,65 @@
-import React from "react";
-import { Box, TextField, Typography, Button, Checkbox, FormControlLabel, Divider, Grid } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, TextField, Typography, Button, Checkbox, FormControlLabel, Divider, Grid, FormControl  } from "@mui/material";
 import { Google, GitHub } from "@mui/icons-material";
+import axios from 'axios';
+import { useUser } from "../UserContext";
 
 export default function Login() {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
+  const [signUp, notSignUp] = useState<boolean>(false);
+  const { setUserId } = useUser();
+
+  const handleSignin = async () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+    if (!emailRegex.test(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+  
+    if(signUp) {
+      try {
+        await axios.post('http://localhost:8080/auth/signup', {
+          username,
+          email,
+          password
+        }, {
+          withCredentials: true // Allow cookies to be sent and stored
+        });
+      } catch(err) {
+        console.error("Error update userinfo", err);
+      }
+    } else {
+      try {
+        await axios.post('http://localhost:8080/auth/login', {
+          email,
+          password
+        }, {
+          withCredentials: true
+        });
+        
+      } catch(err) {
+        console.error("Error update userinfo", err);
+      }
+    }
+  }
+
+  const handleChangeUsername = (event: any) => {
+    setUsername(event.target.value);
+  }
+
+  const handleChangePassword = (event: any) => {
+    setPassword(event.target.value);
+  }
+
+  const handleChangeEmail = (event: any) => {
+    setEmail(event.target.value);
+  }
+
     return (
-        <Box
+      <Box
       sx={{
         minHeight: "100vh",
         display: "flex",
@@ -28,21 +83,31 @@ export default function Login() {
           Welcome back
         </Typography>
         <Typography variant="body2" color="textSecondary" textAlign="center" mb={3}>
-          Sign in to your account
+          Log in to your account
         </Typography>
 
+        {signUp && 
+          <TextField
+            fullWidth
+            label="Username"
+            margin="normal"
+            onChange={handleChangeUsername}
+          />
+        }
         <TextField
           fullWidth
           label="Email address"
           placeholder="name@company.com"
           type="email"
           margin="normal"
+          onChange={handleChangeEmail}
         />
         <TextField
           fullWidth
           label="Password"
           type="password"
           margin="normal"
+          onChange={handleChangePassword}
         />
 
         <Box
@@ -63,6 +128,7 @@ export default function Login() {
           fullWidth
           variant="contained"
           sx={{ backgroundColor: "#000", color: "#fff", mt: 2, mb: 2, "&:hover": { backgroundColor: "#333" } }}
+          onClick={() => handleSignin()}
         >
           Sign in
         </Button>
@@ -100,11 +166,15 @@ export default function Login() {
             component="span"
             color="primary"
             sx={{ cursor: "pointer", textDecoration: "underline" }}
+            onClick={() => {
+              console.log("Clicked");
+              notSignUp(true);
+            }}
           >
             Sign up
           </Typography>
         </Typography>
       </Box>
     </Box>
-    );
+  );
 }

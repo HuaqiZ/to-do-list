@@ -16,7 +16,7 @@ export default function ChangeLabel() {
     const presetColors = ["#1C1F26", "#2B2F36", "#3A3F4B", "#4A4F5C", "#6B7180", "#888D99", "#A1A5B0", "#C5C7CC"];
 
     useEffect(() => {
-        axios.get(`http://localhost:8080/labels`) 
+        axios.get(`http://localhost:8080/${userId}/labels`) 
             .then(response => {
             setCategories(response.data);
             })
@@ -43,13 +43,15 @@ export default function ChangeLabel() {
                 await axios.post(`http://localhost:8080/label/update-label-setting`, {
                     labelName: labelName,
                     color,
-                    labelId: labelId
+                    labelId: labelId,
+                    userId
                 });
             } else {
                 setCategories((prev) => [...prev, {name: labelName, color: color, id: labelId || categories.length + 1}])
                 await axios.post(`http://localhost:8080/label/update-label-setting`, {
                     labelName: labelName,
-                    color
+                    color,
+                    userId
                 });
             }
         } catch(error) {

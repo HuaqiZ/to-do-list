@@ -12,7 +12,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if(!userId) return;
-    axios.get(`http://localhost:8080/display-setting`)
+    axios.get(`http://localhost:8080/${userId}/display-setting`)
       .then(response => {
         setShowLabelColor(response.data[0].show_label_colors === 1 ? true : false);
         setshowCompletedTask(response.data[0].show_completed_tasks === 1 ? true : false);
@@ -24,7 +24,8 @@ export default function SettingsPage() {
     try {
       await axios.post(`http://localhost:8080/display-setting`, {
         showLabelColor: showLabelColor,
-        showCompletedTask
+        showCompletedTask,
+        userId
       });
     } catch (error) {
       console.error("Error update display setting", error);

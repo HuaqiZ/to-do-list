@@ -16,7 +16,6 @@ import {
 } from "@dnd-kit/sortable";
 import SortableItem from "./components/SortableItem";
 import Header from "./components/Header";
-import { useUser } from "./UserContext";
 
 import "./style.css";
 
@@ -38,7 +37,6 @@ interface List {
 const App = () => {
   const [data, setData] = useState<List[]>([]);
   // const [items, setItems] = useState<number[]>([]);
-  const { setUserId } = useUser();
 
   useEffect(() => {
     axios.get(`http://localhost:8080/tasks?limit=10&offset=0&filterByField=status&filterByValue=1`) 
@@ -46,8 +44,7 @@ const App = () => {
         const sortedData = response.data.sort((a: List, b: List) => a.display_order - b.display_order);
         setData(sortedData);
         // setItems(sortedData.map((item: List) => item.display_order));
-        setUserId(sortedData[1].user_id);
-        localStorage.setItem("userId", String(sortedData[1].user_id));
+        // localStorage.setItem("userId", String(sortedData[1].user_id));
       })
       .catch(error => console.error('Error:', error));
   }, []);

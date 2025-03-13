@@ -1,19 +1,38 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const jwt = require("jsonwebtoken");
 const cors = require('cors');
 const bcrypt = require("bcryptjs");
+var cookieParser = require('cookie-parser');
+var cookieSession = require('cookie-session')
 
 // Create an Express app
 const app = express();
 const PORT = 8080;
 
 // Use CORS to allow cross-origin requests from the frontend
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow these methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
+}));
 
 // Use JSON middleware to parse request bodies
 app.use(express.json());
-const SECRET_KEY = process.env.JWT_SECRET || "pass";
+app.use(cookieSession({
+  name: 'session',
+  keys: ["root"],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000,
+  sameSite: 'strict',
+  httpOnly: true,
+  secure: false
+}))
+app.use(cookieParser());
+
 
 // Create a connection to the MySQL database
 const db = mysql.createConnection({
@@ -32,12 +51,82 @@ db.connect((err: any) => {
   }
 });
 
+app.get('/auth/check', (req: any, res: any) => {
+  if(req.cookies.user) {
+    try {
+      const decoded = jwt.verify(req.cookies.user, process.env.JWTSECRET);
+      req.user = decoded;
+      res.json({ user: req.user });
+    } catch (err) {
+      req.user = null;
+      console.log("JWT verification failed:", err);
+      res.status(401).json({ message: "JWT verification failed" });
+    }
+  } else {
+    req.user = null;
+    res.status(401).json({ message: "No token provided" });
+  }
+})
+
 // Simulated login route
-app.post("/auth/login", (req: any, res: any) => {
-  const user = { id: 1, username: "testuser" };
-  const token = jwt.sign(user, SECRET_KEY, { expiresIn: "1h" });
-  res.json({ token });
+app.post("/auth/signup", (req: any, res: any) => {
+  let { username, email, password } = req.body;
+  const query = 'INSERT INTO users(username, email, password_hash) VALUES (?, ?, ?)';
+  const salt = bcrypt.genSaltSync(10);
+  password = bcrypt.hashSync(password, salt);
+
+  db.query(query, [username, email, password], (err: any, result: any) => {
+    if(err) {
+      console.error("Error inserting into list:", err);
+      return res.status(500).json({ error: "Failed to insert task" });
+    }
+
+    const user = { exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, id: result.insertId, username: username, email: email };
+    const token = jwt.sign(user, process.env.JWTSECRET);
+    req.session.user = {token};
+
+    res.cookie("user", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      sameSite: 'Strict'
+    });
+
+    res.json({ message: "Sign Up in successfully", result });
+  })
 });
+
+app.post("/auth/login", (req: any, res: any) => {
+  let { email, password } = req.body;
+  const query = 'SELECT * FROM users WHERE email = ?'
+  db.query(query, [email], (err: any, result: any) => {
+    if(err) {
+      console.error("Error login", err);
+      return res.status(500).json({ error: 'Failed to login'});
+    }
+
+    if(!result) {
+      //not email matched
+    }
+
+    const matchOrNot = bcrypt.compareSync(password, result[0].password_hash);
+
+    if(!matchOrNot) {
+      return res.status(500).json({ error: 'Failed to login'});
+    }
+
+    const user = { exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, id: result[0].user_id, username: result[0].username, email: email };
+    const token = jwt.sign(user, process.env.JWTSECRET);
+    req.session.user = {token};
+
+    res.cookie("user", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      sameSite: 'Strict'
+    });
+
+    res.json({ message: "Sign Up in successfully", result });
+  })
+})
 
 // Example API route to fetch all records from the 'list' table
 app.get('/tasks', (req: any, res: any) => {
@@ -87,8 +176,8 @@ app.post('/task/update-order', (req: any, res: any) => {
   });
 });
 
-app.get('/labels', (req: any, res: any) => {
-  let query = 'SELECT id, name, color FROM labels';
+app.get('/:user/labels', (req: any, res: any) => {
+  let query = `SELECT id, name, color FROM labels WHERE user_id = ${req.params.user}`;
   db.query(query, (err: any, results: any) => {
     if (err) {
       console.log(err);
@@ -100,11 +189,11 @@ app.get('/labels', (req: any, res: any) => {
 });
 
 app.post('/label/update-label-setting', (req: any, res: any) => {
-  const {labelName, color, labelId} = req.body;
+  const {labelName, color, labelId, userId} = req.body;
 
   let query = "";
   if(labelId) {
-    query = 'UPDATE labels SET name = ?, color = ? WHERE user_id = 1 AND id = ? ';
+    query = `UPDATE labels SET name = ?, color = ? WHERE user_id = ${userId} AND id = ? `;
   }else{
     query = `INSERT INTO labels (name, color, user_id) VALUES (?, ?, ?)`;
   }
@@ -118,8 +207,8 @@ app.post('/label/update-label-setting', (req: any, res: any) => {
   })
 })
 
-app.get('/display-setting', (req: any, res: any) => {
-  let query = `SELECT show_label_colors, show_completed_tasks FROM users WHERE user_id = 1`;
+app.get('/:user/display-setting', (req: any, res: any) => {
+  let query = `SELECT show_label_colors, show_completed_tasks FROM users WHERE user_id = ${req.params.user}`;
   db.query(query, (err: any, results: any) => {
     if (err) {
       console.log(err);
@@ -131,9 +220,9 @@ app.get('/display-setting', (req: any, res: any) => {
 });
 
 app.post('/display-setting', (req: any, res: any) => {
-  const {showLabelColor, showCompletedTask} = req.body;
+  const {showLabelColor, showCompletedTask, userId} = req.body;
   
-  let query = `UPDATE users SET show_label_colors = ${showLabelColor === true ? 1 : 0}, show_completed_tasks = ${showCompletedTask === true ? 1 : 0} WHERE user_id = 1`
+  let query = `UPDATE users SET show_label_colors = ${showLabelColor === true ? 1 : 0}, show_completed_tasks = ${showCompletedTask === true ? 1 : 0} WHERE user_id = ${userId}`
 
   db.query(query, (err: any, results: any) => {
     if (err) {
