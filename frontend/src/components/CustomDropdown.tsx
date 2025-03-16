@@ -26,9 +26,9 @@ export default function CustomDropdown({ onValueChange }: CustomDropdownProps) {
         onChange={handleChange}
         sx={{borderColor: 'black', height: '30px'}}
       >
-        <MenuItem value={0}>New Task</MenuItem>
-        <MenuItem value={1}>In Progress</MenuItem>
-        <MenuItem value={2}>Completed</MenuItem>
+        <MenuItem value={1}>High Priority</MenuItem>
+        <MenuItem value={2}>Medium Priority</MenuItem>
+        <MenuItem value={0}>Low Priority</MenuItem>
       </Select>
     </FormControl>
   );

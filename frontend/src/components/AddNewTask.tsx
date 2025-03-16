@@ -11,17 +11,16 @@ interface List {
   task_name: string,
   content: string,
   due_date: any,
-  display_order: number,
-  status: number,
+  priority: number,
   label: {
     id: number;
     name: string;
     color: string;
 }[],
   user_id: number,
-  }
+}
 
-const AddNewTask = ({data, setData }: {data: List[], setData: React.Dispatch<React.SetStateAction<List[]>>}) => {
+const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<List[]>>}) => {
   const { userId } = useUser();
 
   const [popupBox, showPopupBox] = useState(false);
@@ -70,8 +69,8 @@ const AddNewTask = ({data, setData }: {data: List[], setData: React.Dispatch<Rea
         task_name: name,
         content,
         due_date: selectedDate,
-        display_order: data.length + 1,
-        status: selectedStatus,
+        // display_order: data.length + 1,
+        priority: selectedStatus,
         label: labels,
         user_id: userId !== null ? userId : 0, 
       }
@@ -80,8 +79,8 @@ const AddNewTask = ({data, setData }: {data: List[], setData: React.Dispatch<Rea
         task_name: name,
         content: content,
         due_date: selectedDate,
-        display_order: data.length + 1,
-        status: selectedStatus,
+        // display_order: data.length + 1,
+        priority: selectedStatus,
         label: selectedLabel,
         user_id: userId !== null ? userId : 0,
       })
@@ -101,7 +100,7 @@ const AddNewTask = ({data, setData }: {data: List[], setData: React.Dispatch<Rea
 
     return (
         <div>
-            <Button variant="contained" size="medium" startIcon={<AddIcon />} onClick={() => createNewTodo()}>
+            <Button size="medium" startIcon={<AddIcon />} onClick={() => createNewTodo()} sx={{backgroundColor: 'black', color: 'white', padding: '10px', textTransform: "none"}}>
                 New Task
             </Button>
             {popupBox &&
@@ -119,7 +118,7 @@ const AddNewTask = ({data, setData }: {data: List[], setData: React.Dispatch<Rea
                         <CustomDatePicker onValueChange={handleDatePickerChange} />
                       </div>
                       <div className="column_item">
-                        <span>Status</span>
+                        <span>Priority</span>
                         <CustomDropdown onValueChange={handleDropdownChange} />
                       </div>
                     </div>

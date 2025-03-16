@@ -22,8 +22,6 @@ export const useUser = () => {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userId, setUserId] = useState<number | null>(null);
 
-  console.log("enter", userId);
-
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {

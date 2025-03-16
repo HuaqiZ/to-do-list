@@ -91,7 +91,14 @@ app.post("/auth/signup", (req: any, res: any) => {
       sameSite: 'Strict'
     });
 
-    res.json({ message: "Sign Up in successfully", result });
+    res.json({
+      message: "Sign Up successful",
+      user: {
+        id: result.insertId,
+        username: username,
+        email: email,
+      }
+    });
   })
 });
 
@@ -130,7 +137,7 @@ app.post("/auth/login", (req: any, res: any) => {
 
 // Example API route to fetch all records from the 'list' table
 app.get('/tasks', (req: any, res: any) => {
-  let query = 'SELECT id, content, due_date, status, display_order, task_name, user_id FROM list';
+  let query = 'SELECT id, content, due_date, priority, task_name, user_id FROM list';
   if(req.query.filterByField && req.query.filterByValue) {
     query += ` WHERE ${req.query.filterByField}=${req.query.filterByValue}`
   }
@@ -150,31 +157,31 @@ app.get('/tasks', (req: any, res: any) => {
   });
 });
 
-app.post('/task/update-order', (req: any, res: any) => {
-  const { tasks } = req.body; // Expecting an array of { id, display_order }
+// app.post('/task/update-order', (req: any, res: any) => {
+//   const { tasks } = req.body; // Expecting an array of { id, display_order }
 
-  if (!Array.isArray(tasks) || tasks.length === 0) {
-    return res.status(400).json({ error: "Invalid data format" });
-  }
+//   if (!Array.isArray(tasks) || tasks.length === 0) {
+//     return res.status(400).json({ error: "Invalid data format" });
+//   }
 
-  let query = `UPDATE list SET display_order = CASE `;
-  const values: number[] = [];
+//   let query = `UPDATE list SET display_order = CASE `;
+//   const values: number[] = [];
 
-  tasks.forEach(({ id, display_order }) => {
-    query += `WHEN id = ? THEN ? `;
-    values.push(id, display_order);
-  });
+//   tasks.forEach(({ id, display_order }) => {
+//     query += `WHEN id = ? THEN ? `;
+//     values.push(id, display_order);
+//   });
 
-  query += `END WHERE id IN (${tasks.map(() => "?").join(",")})`;
+//   query += `END WHERE id IN (${tasks.map(() => "?").join(",")})`;
 
-  db.query(query, [...values, ...tasks.map(task => task.id)], (err: any, results: any) => {
-    if (err) {
-      res.status(500).json({ error: 'Database query error', details: err });
-      return;
-    }
-    res.json({ message: "Order updated successfully", results });
-  });
-});
+//   db.query(query, [...values, ...tasks.map(task => task.id)], (err: any, results: any) => {
+//     if (err) {
+//       res.status(500).json({ error: 'Database query error', details: err });
+//       return;
+//     }
+//     res.json({ message: "Order updated successfully", results });
+//   });
+// });
 
 app.get('/:user/labels', (req: any, res: any) => {
   let query = `SELECT id, name, color FROM labels WHERE user_id = ${req.params.user}`;
@@ -234,13 +241,13 @@ app.post('/display-setting', (req: any, res: any) => {
 });
 
 app.post('/add', (req: any, res: any) => {
-  const { task_name, content, due_date, status, display_order, label, user_id } = req.body;
+  const { task_name, content, due_date, priority, label, user_id } = req.body;
   const formattedDueDate = new Date(due_date).toISOString().split('T')[0];
   const insertTaskQuery = `
-    INSERT INTO list (task_name, content, due_date, status, display_order, user_id) 
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO list (task_name, content, due_date, priority, user_id) 
+    VALUES (?, ?, ?, ?, ?)
   `;
-  db.query(insertTaskQuery, [task_name, content, formattedDueDate, status, display_order, user_id], (err: any, results: any) => {
+  db.query(insertTaskQuery, [task_name, content, formattedDueDate, priority, user_id], (err: any, results: any) => {
     if (err) {
       console.error("Error inserting into list:", err);
       return res.status(500).json({ error: "Failed to insert task" });

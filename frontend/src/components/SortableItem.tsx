@@ -7,8 +7,7 @@ interface List {
     task_name: string,
     content: string,
     due_date: any,
-    display_order: number,
-    status: number,
+    priority: number,
   }
 
 const SortableItem  = ({ id, content }: {id: number, content: List}) => {

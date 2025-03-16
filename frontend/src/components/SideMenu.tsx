@@ -21,6 +21,9 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
+  const email = localStorage.getItem("email");
+  const username = localStorage.getItem("username");
+
   return (
     <Drawer
       variant="permanent"
@@ -48,16 +51,16 @@ export default function SideMenu() {
       >
         <Avatar
           sizes="small"
-          alt="Riley Carter"
-          src="/static/images/avatar/7.jpg"
           sx={{ width: 36, height: 36 }}
-        />
+        >
+          {username && username[0]}
+        </Avatar>
         <Box sx={{ mr: 'auto' }}>
           <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-            Riley Carter
+            {username}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            riley@email.com
+            {email}
           </Typography>
         </Box>
       </Stack>

@@ -1,15 +1,14 @@
 import * as React from 'react';
-import Stack from '@mui/material/Stack';
 import AddNewTask from "./AddNewTask";
 import EditType from "./EditType";
+import { Stack, Button } from '@mui/material';
 
 interface List {
   id?: number,
   task_name: string,
   content: string,
   due_date: any,
-  display_order: number,
-  status: number,
+  priority: number,
   label: {
     id: number;
     name: string;
@@ -18,7 +17,24 @@ interface List {
   user_id: number,
 }
 
-export default function Header({data, setData }: {data: List[], setData: React.Dispatch<React.SetStateAction<List[]>>}) {
+export default function Header({data, setData, selectedTasks, setSelectedTasks }: {data: List[], setData: React.Dispatch<React.SetStateAction<List[]>>, selectedTasks: number[], setSelectedTasks: React.Dispatch<React.SetStateAction<number[]>>}) {
+  const handleDeleteTasks = async () => {
+    try {
+      await Promise.all(
+        selectedTasks.map((taskId) =>
+          fetch(`http://localhost:8080/tasks/${taskId}`, {
+            method: 'DELETE',
+          })
+        )
+      );
+      alert('Tasks deleted');
+      setSelectedTasks([]);
+      // 刷新或更新数据
+    } catch (error) {
+      console.error('Failed to delete tasks:', error);
+    }
+  };
+
   return (
     <Stack
       direction="row"
@@ -33,9 +49,20 @@ export default function Header({data, setData }: {data: List[], setData: React.D
       }}
       spacing={2}
     >
-        <p style={{ marginRight:'1000px'}}>My Tasks</p>
-        <AddNewTask data={data} setData={setData} />
-        {/* <EditType /> */}
+      <Stack direction="row" spacing={2} alignItems="center">
+      <h3>My Tasks</h3>
+      {selectedTasks.length > 0 && (
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleDeleteTasks}
+        >
+          Delete {selectedTasks.length} Task{selectedTasks.length > 1 ? 's' : ''}
+        </Button>
+      )}
+      </Stack>
+      <AddNewTask setData={setData} />
+      {/* <EditType /> */}
     </Stack>
   );
 }

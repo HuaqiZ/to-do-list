@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Box, TextField, Typography, Button, Checkbox, FormControlLabel, Divider, Grid, FormControl  } from "@mui/material";
 import { Google, GitHub } from "@mui/icons-material";
 import axios from 'axios';
 import { useUser } from "../UserContext";
 
-export default function Login() {
+const Login = ({setIsAuthenticated}: {setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>}) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [username, setUsername] = useState<string>('');
@@ -28,6 +28,7 @@ export default function Login() {
         }, {
           withCredentials: true // Allow cookies to be sent and stored
         });
+        setIsAuthenticated(true);
       } catch(err) {
         console.error("Error update userinfo", err);
       }
@@ -39,7 +40,7 @@ export default function Login() {
         }, {
           withCredentials: true
         });
-        
+        setIsAuthenticated(true);
       } catch(err) {
         console.error("Error update userinfo", err);
       }
@@ -178,3 +179,5 @@ export default function Login() {
     </Box>
   );
 }
+
+export default Login;
