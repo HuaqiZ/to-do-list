@@ -45,7 +45,7 @@ const AppRouter = () => {
 
   return isAuthenticated ? (
    <Box sx={{ display: "flex", height: "100vh" }}>
-        <SideMenu />
+        <SideMenu setIsAuthenticated={setIsAuthenticated} />
 
         <Box
           component="main"

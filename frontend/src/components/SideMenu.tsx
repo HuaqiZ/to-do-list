@@ -1,11 +1,9 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
-import Avatar from '@mui/material/Avatar';
+import {Avatar, Button, Box, Stack, Typography} from '@mui/material';
 import MuiDrawer, { drawerClasses } from '@mui/material/Drawer';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import MenuContent from './MenuContent';
+import axios from 'axios';
 
 const drawerWidth = 240;
 
@@ -20,9 +18,20 @@ const Drawer = styled(MuiDrawer)({
   },
 });
 
-export default function SideMenu() {
+export default function SideMenu({setIsAuthenticated}: {setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>}) {
   const email = localStorage.getItem("email");
   const username = localStorage.getItem("username");
+
+  const handleLogout =() => {
+    try {
+      axios.get('http://localhost:8080/auth/logout', {
+        withCredentials: true
+      });
+      setIsAuthenticated(false);
+    } catch(err) {
+      console.error('Logout failed:', err);
+    }
+  }
 
   return (
     <Drawer
@@ -66,6 +75,8 @@ export default function SideMenu() {
       </Stack>
       </Box>
       <MenuContent />
+
+      <Button variant="outlined" color="error" sx={{marginBottom: '30px', width: '80%', marginLeft: '20px'}} onClick={() => handleLogout()}>Logout</Button>
     </Drawer>
   );
 }

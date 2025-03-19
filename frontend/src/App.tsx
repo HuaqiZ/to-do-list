@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import {Box, Grid, Button} from '@mui/material';
+import TablePagination from '@mui/material/TablePagination';
 import {
   DndContext,
   closestCenter,
@@ -34,31 +35,32 @@ interface List {
   user_id: number,
 }
 
+const priorityMap: Record<string, number> = {
+  High: 1,
+  Medium: 2,
+  Low: 0,
+};
+
 const App = () => {
   const [data, setData] = useState<List[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
-  // const [items, setItems] = useState<number[]>([]);
-
-  // const filteredTasks = selectedFilter === "All" ? data : data.filter(task => task.priority === selectedFilter);
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [selectedFilter, setSelectedFilter] = useState("All");
 
   useEffect(() => {
-    // axios.get(`http://localhost:8080/tasks?limit=10&offset=0&filterByField=priority&filterByValue=1`) 
-    axios.get(`http://localhost:8080/tasks?limit=10&offset=0`) 
+    axios.get(`http://localhost:8080/tasks?limit=${rowsPerPage}&offset=${page * rowsPerPage}`) 
       .then(response => {
-        // const sortedData = response.data.sort((a: List, b: List) => a.display_order - b.display_order);
         setData(response.data);
-        // setItems(sortedData.map((item: List) => item.display_order));
-        // localStorage.setItem("userId", String(sortedData[1].user_id));
       })
       .catch(error => console.error('Error:', error));
-  }, []);
+  }, [page, rowsPerPage]);
 
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor)
-  );
+  // const sensors = useSensors(
+  //   useSensor(PointerSensor),
+  //   useSensor(KeyboardSensor)
+  // );
 
   const handleSelectTask = (taskId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -68,6 +70,28 @@ const App = () => {
     }
   };
 
+  const handleChangePage = (event: any, newPage: any) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleFilter = async (filter: string) => {
+    try {
+      const url = priorityMap[filter] !== undefined
+      ? `http://localhost:8080/tasks?filterByField=priority&filterByValue=${priorityMap[filter]}`
+      : 'http://localhost:8080/tasks?limit=10&offset=0';
+      
+      const response = await axios.get(url);
+      setData(response.data);
+      setSelectedFilter(filter);
+    } catch(err) {
+      console.error('Error fetching tasks:', err);
+    }
+  }
   // const handleDragEnd = (event: any) => {
   //   const { active, over } = event;
   //   if (!over || active.id === over.id) return;
@@ -129,27 +153,53 @@ const App = () => {
             ))}
           </div>
 
-        <Grid container spacing={1} sx={{ mt: 2 }}>
-          <Grid item>
+        <Grid container spacing={1} sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Grid item sx={{ display :' flex', alignContent: 'center', gap: 1.5}}>
             <Button
-              onClick={() => setSelectedFilter("All")}
-              sx={{ textTransform: "none", color: 'black' }}
+              sx={{
+                textTransform: "none",
+                color: 'black',
+                bgcolor: selectedFilter === "All" ? '#e5e7eb' : 'transparent',
+                '&:hover': {
+                  bgcolor: selectedFilter === "All" ? '#b7b9bc' : 'rgba(0, 0, 0, 0.04)',
+                },
+                paddingX: '20px',
+                paddingY: '15px',
+                height: "30px"
+              }}
+              onClick={() => handleFilter("All")}
             >
               All Tasks
             </Button>
-          </Grid>
-
-          {/* Priority Filter Buttons */}
+          
           {["High", "Medium", "Low"].map((filter) => (
-            <Grid item key={filter}>
               <Button
-                onClick={() => setSelectedFilter(filter)}
-                sx={{ textTransform: "none", color: 'black'  }}
+                sx={{
+                  textTransform: "none",
+                  color: 'black',
+                  bgcolor: selectedFilter === filter ? '#e5e7eb' : 'transparent',
+                  '&:hover': {
+                    bgcolor: selectedFilter === filter ? '#b7b9bc' : 'rgba(0, 0, 0, 0.04)',
+                  },
+                  paddingX: '20px',
+                  paddingY: '15px',
+                  height: "30px"
+                }}
+                onClick={() => handleFilter(filter)}
               >
                 {filter} Priority
               </Button>
-            </Grid>
           ))}
+          </Grid>
+
+        <TablePagination
+          component="div"
+          count={100}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
         </Grid>
       </Box>
   );

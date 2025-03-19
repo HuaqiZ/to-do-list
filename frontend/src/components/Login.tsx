@@ -9,7 +9,6 @@ const Login = ({setIsAuthenticated}: {setIsAuthenticated: React.Dispatch<React.S
   const [password, setPassword] = useState<string>('');
   const [username, setUsername] = useState<string>('');
   const [signUp, notSignUp] = useState<boolean>(false);
-  const { setUserId } = useUser();
 
   const handleSignin = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

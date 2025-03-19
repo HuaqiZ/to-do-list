@@ -1,5 +1,5 @@
 import React, {useState, useEffect, Dispatch, SetStateAction} from "react";
-import { TextField, Card, CardContent, Box, Typography, Button, Grid } from '@mui/material';
+import { TextField, Card, CardContent, Box, Typography, Button, Grid, Popover } from '@mui/material';
 import axios from 'axios';
 import { useUser } from "../UserContext";
 
@@ -12,6 +12,9 @@ export default function ChangeLabel() {
     const [color, setColor] = useState("#000000");
     const [labelName, setLabelName] = useState<string>("");
     const [labelId, setLabelId] = useState<number>(0);
+    const [anchorEl, setAnchorEl] = useState(null);
+
+    const open = Boolean(anchorEl);
 
     const presetColors = ["#1C1F26", "#2B2F36", "#3A3F4B", "#4A4F5C", "#6B7180", "#888D99", "#A1A5B0", "#C5C7CC"];
 
@@ -61,6 +64,14 @@ export default function ChangeLabel() {
         setPopupOpen(false);
     };
 
+    const handlePopoverOpen = (event: any) => {
+        setAnchorEl(event.currentTarget);
+      };
+    
+      const handlePopoverClose = () => {
+        setAnchorEl(null);
+      };
+
     return (
         <div>
             <Card>
@@ -91,7 +102,7 @@ export default function ChangeLabel() {
                     sx={{
                     width: 20,
                     height: 20,
-                    backgroundColor: label.color === "primary" ? 'lightblue' : label.color,
+                    backgroundColor: label.color,
                     borderRadius: 1,
                     marginRight: 2,
                     }}
@@ -109,8 +120,27 @@ export default function ChangeLabel() {
                 </Grid>
             </Grid>
             ))}
-            <Button sx={{textTransform: "none", color: "black"}} onClick={() => openPopup("Add New Label")}> + Add New Label</Button>
+            {categories.length < 5 && 
+                <Button sx={{textTransform: "none", color: "black"}} onClick={() => openPopup("Add New Label")} onMouseEnter={handlePopoverOpen} onMouseLeave={handlePopoverClose}> + Add New Label</Button>}
             </CardContent>
+            <Popover
+                id="mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={open}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+                }}
+                transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+                }}
+                onClose={handlePopoverClose}
+                disableRestoreFocus
+            >
+                <Typography sx={{ p: 1 }}>You can have max 5 labels</Typography>
+            </Popover>
         </Card>
 
         {popupOpen && (

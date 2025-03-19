@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 
 interface List {
-    id?: number,
+    id: number,
     task_name: string,
     content: string,
     due_date: any,

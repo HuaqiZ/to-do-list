@@ -29,7 +29,7 @@ const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<L
   const [selectedStatus, setSelectedStatus] = useState<number>(0);
   const [selectedDate, setSelectedDate] = useState('');
   const [labels, setLabel] = useState<{ id: number; name: string; color: string }[]>([]);
-  const [selectedLabel, setSelectedLabel] = useState<{ id: number; name: string; color: string }>();
+  const [selectedLabel, setSelectedLabel] = useState<{ id: number; name: string; color: string }[]>([]);
 
   useEffect(() => {
     const fetchLabels = async () => {
@@ -65,13 +65,17 @@ const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<L
     }
 
     const addNewToDo = () => {
+      if (!name.trim() || !selectedDate || selectedStatus) {
+        alert("Please fill out all the required field");
+        return;
+      }
+      
       const taskData: List = {
         task_name: name,
         content,
         due_date: selectedDate,
-        // display_order: data.length + 1,
         priority: selectedStatus,
-        label: labels,
+        label: selectedLabel,
         user_id: userId !== null ? userId : 0, 
       }
 
@@ -79,7 +83,6 @@ const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<L
         task_name: name,
         content: content,
         due_date: selectedDate,
-        // display_order: data.length + 1,
         priority: selectedStatus,
         label: selectedLabel,
         user_id: userId !== null ? userId : 0,
@@ -94,7 +97,7 @@ const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<L
       setData((prev) => [...prev, taskData]);
       setContent('');
       setName('');
-      setSelectedLabel(undefined);
+      setSelectedLabel([]);
       showPopupBox(false);
     };
 
@@ -108,17 +111,17 @@ const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<L
               <div className='popup'>
                 <div className='content_popup'>
                   <h2>Create task</h2>
-                    <label>Task Title</label>
+                    <label>Task Title<span style={{ color: 'red' }}> *</span></label>
                     <input id="task_name" value={name} placeholder='Enter task title' onChange={handleTaskNameChange}/>
                     <label>Description</label>
                     <textarea id="task_description" value={content} onChange={handleTaskDescriptionChange} placeholder='Add description' />
                     <div className="row_container">
                       <div className="column_item">
-                        <span>Due date</span>
+                        <span>Due date<span style={{ color: 'red' }}> *</span></span>
                         <CustomDatePicker onValueChange={handleDatePickerChange} />
                       </div>
                       <div className="column_item">
-                        <span>Priority</span>
+                        <span>Priority<span style={{ color: 'red' }}> *</span></span>
                         <CustomDropdown onValueChange={handleDropdownChange} />
                       </div>
                     </div>
@@ -127,10 +130,12 @@ const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<L
                     {labels.map((item) => (
                       <Chip
                         key={item.id}
-                        color={item.color as any}
+                        sx={{ backgroundColor: selectedLabel && selectedLabel.length > 0 && selectedLabel.some(label => label.id === item.id) ? item.color : 'transparent', 
+                              border: selectedLabel && selectedLabel.length > 0 && selectedLabel.some(label => label.id === item.id) ? 'none' : `2px solid ${item.color}` }}
                         label={item.name}
-                        onClick={() => setSelectedLabel({ id: item.id, name: item.name, color: item.color })}
-                        variant={selectedLabel && selectedLabel.id === item.id ? "filled" : "outlined"}
+                        onClick={() => {
+                          setSelectedLabel(selectedLabel.some((i) => i.id === item.id) ? selectedLabel.filter((i) => i.id !== item.id) : [...selectedLabel, { id: item.id, name: item.name, color: item.color }])
+                        }}
                         clickable
                       />
                     ))}
@@ -140,7 +145,7 @@ const AddNewTask = ({ setData }: {setData: React.Dispatch<React.SetStateAction<L
                         onClick={() => {
                           setContent('');
                           setName('');
-                          setSelectedLabel(undefined);
+                          setSelectedLabel([]);
                           showPopupBox(false)
                           }}>Cancel</button>
                       <button onClick={() => addNewToDo()}>Create task</button>

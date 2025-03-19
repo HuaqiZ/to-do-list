@@ -26,6 +26,7 @@ interface ButtonFieldProps
 
 interface CustomDatePickerProps {
   onValueChange: ( value: any ) => void;
+  date?: Dayjs;
 }
 
 function ButtonField(props: ButtonFieldProps) {
@@ -55,8 +56,8 @@ function ButtonField(props: ButtonFieldProps) {
   );
 }
 
-export default function CustomDatePicker({onValueChange}: CustomDatePickerProps) {
-  const [value, setValue] = React.useState<Dayjs | null>(dayjs());
+export default function CustomDatePicker({date, onValueChange}: CustomDatePickerProps) {
+  const [value, setValue] = React.useState<Dayjs | null>(dayjs(date) ?? null); 
   const [open, setOpen] = React.useState(false);
 
   const handleDateChange = (newValue: Dayjs | null)  => {
@@ -71,7 +72,7 @@ export default function CustomDatePicker({onValueChange}: CustomDatePickerProps)
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
         value={value}
-        label={value == null ? null : value.format('MMM DD, YYYY')}
+        label={value ? value.format('MMM DD, YYYY') : 'MM/DD/YYYY'}
         onChange={handleDateChange}
         slots={{ field: ButtonField }}
         slotProps={{

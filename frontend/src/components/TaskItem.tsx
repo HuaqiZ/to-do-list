@@ -29,12 +29,11 @@ const priorityLabels: Record<number, string>  = {
 
 const TaskItem  = ({item, onSelect}: {item: List, onSelect: (taskId: number, isSelected: boolean) => void}) => {
     const { userId } = useUser();
-    
     const [openPopup, setOpenPopup] = useState<boolean>(false);
-    const [selectedDate, setSelectedDate] = useState('');
-    const [selectedStatus, setSelectedStatus] = useState<number>(0);
+    const [selectedDate, setSelectedDate] = useState(item.due_date);
+    const [selectedPriority, setSelectedPriority] = useState<number>(item.priority);
     const [labels, setLabel] = useState<{ id: number; name: string; color: string }[]>([]);
-    const [selectedLabel, setSelectedLabel] = useState<{ id: number; name: string; color: string }>();
+    const [selectedLabel, setSelectedLabel] = useState<{ id: number; name: string; color: string }[]>(item.label);
     const [isChecked, setIsChecked] = useState(false);
     const [name, setName] = useState(item.task_name);
     const [content, setContent] = useState(item.content);
@@ -63,7 +62,7 @@ const TaskItem  = ({item, onSelect}: {item: List, onSelect: (taskId: number, isS
       }
 
       const handleDropdownChange = (value: number) => {
-        setSelectedStatus(value); // Update the value in the parent
+        setSelectedPriority(value); // Update the value in the parent
       };
 
       const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +80,7 @@ const TaskItem  = ({item, onSelect}: {item: List, onSelect: (taskId: number, isS
 
     return (
         <div>
-        <Card key={item.id} sx={{ mb: 2, backgroundColor: "#f9fafb" }}>
+        <Card key={item.id} sx={{ mb: 2, backgroundColor: '#f9fafb' }}>
           <CardContent>
             <Grid container alignItems="center" spacing={2}>
               <Grid item>
@@ -92,6 +91,15 @@ const TaskItem  = ({item, onSelect}: {item: List, onSelect: (taskId: number, isS
               </Grid>
               <Grid item xs>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", marginTop: '10px' }}>{item.task_name}</Typography>
+                {item.label && 
+                  item.label.map((info) => (
+                    <Chip
+                      key={info.id}
+                      label={info.name}
+                      sx={{backgroundColor: info.color, marginRight: '5px'}}
+                    />
+                ))
+                }
                 <Typography variant="body2" sx={{color: '#6a6b6b'}}>Due: {new Date(item.due_date).toLocaleDateString("en-US", options)}</Typography>
               </Grid>
               <Grid item>
@@ -135,11 +143,11 @@ const TaskItem  = ({item, onSelect}: {item: List, onSelect: (taskId: number, isS
           <div className="row_container">
             <div className="column_item" style={{gap: 0}}>
                 <Typography variant="subtitle2" gutterBottom>Due date</Typography>
-                <CustomDatePicker onValueChange={handleDatePickerChange} />
+                <CustomDatePicker date={selectedDate} onValueChange={handleDatePickerChange} />
             </div>
             <div className="column_item" style={{gap: 0}}>
                 <Typography variant="subtitle2" gutterBottom>Priority</Typography>
-                <CustomDropdown onValueChange={handleDropdownChange} />
+                <CustomDropdown date={selectedPriority} onValueChange={handleDropdownChange} />
             </div>
         </div>
   
@@ -161,12 +169,14 @@ const TaskItem  = ({item, onSelect}: {item: List, onSelect: (taskId: number, isS
                 <Stack direction="row" spacing={1} sx={{marginTop:'10px'}}>
                 {labels.map((item) => (
                     <Chip
-                    key={item.id}
-                    color={item.color as any}
-                    label={item.name}
-                    onClick={() => setSelectedLabel({ id: item.id, name: item.name, color: item.color })}
-                    variant={selectedLabel && selectedLabel.id === item.id ? "filled" : "outlined"}
-                    clickable
+                      key={item.id}
+                      sx={{ backgroundColor: selectedLabel && selectedLabel.length > 0 && selectedLabel.some(label => label.id === item.id) ? item.color : 'transparent', 
+                            border: selectedLabel && selectedLabel.length > 0 && selectedLabel.some(label => label.id === item.id) ? 'none' : `2px solid ${item.color}` }}
+                      label={item.name}
+                      onClick={() => {
+                        setSelectedLabel(selectedLabel.some((i) => i.id === item.id) ? selectedLabel.filter((i) => i.id !== item.id) : [...selectedLabel, { id: item.id, name: item.name, color: item.color }])
+                      }}
+                      clickable
                     />
                 ))}
                 </Stack>

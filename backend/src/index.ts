@@ -129,24 +129,49 @@ app.post("/auth/login", (req: any, res: any) => {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
       sameSite: 'Strict'
-    });
+    }); 
 
     res.json({ message: "Sign Up in successfully", result });
   })
 })
 
+app.get("/auth/logout", (req: any, res: any) => {
+  res.clearCookie("user");
+  res.clearCookie("session");
+  res.clearCookie("session.sig");
+  
+  res.json({ success: true });
+})
+
 // Example API route to fetch all records from the 'list' table
 app.get('/tasks', (req: any, res: any) => {
-  let query = 'SELECT id, content, due_date, priority, task_name, user_id FROM list';
+  // let query = 'SELECT id, content, due_date, priority, task_name, user_id FROM list';
+  let query = `
+      SELECT t.id, t.content, t.due_date, t.priority, t.task_name, t.user_id,
+      CASE 
+           WHEN COUNT(l.id) > 0 THEN JSON_ARRAYAGG(
+               JSON_OBJECT('id', l.id, 'name', l.name, 'color', l.color)
+           )
+           ELSE NULL
+       END AS label
+      FROM list t
+      LEFT JOIN task_labels tl ON t.id = tl.task_id
+      LEFT JOIN labels l ON tl.label_id = l.id
+  `;
+
   if(req.query.filterByField && req.query.filterByValue) {
     query += ` WHERE ${req.query.filterByField}=${req.query.filterByValue}`
   }
+  
+  query += ' GROUP BY t.id, t.content, t.due_date, t.priority, t.task_name, t.user_id';
+
   if(req.query.limit) {
     query += ` limit ${req.query.limit}`
   }
   if(req.query.offset) {
     query += ` offset ${req.query.offset}`
   }
+
   db.query(query, (err: any, results: any) => {
     if (err) {
       console.log(err);
@@ -251,6 +276,10 @@ app.post('/add', (req: any, res: any) => {
     if (err) {
       console.error("Error inserting into list:", err);
       return res.status(500).json({ error: "Failed to insert task" });
+    }
+
+    if (!label?.id) {
+      return res.status(201).json({ message: "Task added successfully without label" });
     }
 
     const newTaskId = results.insertId;
